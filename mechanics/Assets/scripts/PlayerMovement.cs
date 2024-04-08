@@ -6,15 +6,24 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     public float groundDrag;
-    public float moveSpeed;
+    private float moveSpeed;
+    public float walkSpeed;
+    public float sprintSpeed;
 
+    [Header("Jumping")]
     public float jumpForce;
     public float jumpCoolDown;
     public float airMultiplier;
     bool readyToJump;
 
+    [Header("Crouching")]
+    public float crouchSpeed;
+    public float crouchYscale;
+    public float startYscale;
+
     [Header("Keybinds")]
     public KeyCode jumpkey = KeyCode.Space;
+    public KeyCode sprintKey = KeyCode.LeftShift;
 
     [Header("Ground Check")]
     public float playerHeight;
@@ -25,6 +34,15 @@ public class PlayerMovement : MonoBehaviour
     float verticalInput;
     Vector3 moveDirection;
     Rigidbody rb;
+
+    public MovementState state;
+    public enum MovementState
+    {
+        walking,
+        sprinting,
+        air
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,6 +57,8 @@ public class PlayerMovement : MonoBehaviour
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
         MyInput();
         SpeedControl();
+        StateHandler();
+
         //handle drag
         if(grounded)
         {
@@ -65,6 +85,27 @@ public class PlayerMovement : MonoBehaviour
 
             Jump();
             Invoke(nameof(ResetJump), jumpCoolDown);
+        }
+    }
+
+    private void StateHandler ()
+    {
+        //MODE - sprinting
+        if (grounded && Input.GetKey(sprintKey))
+        {
+            state = MovementState.sprinting;
+            moveSpeed = sprintSpeed;
+        }
+        else if (grounded)
+        {
+            //MODE - WALKING
+            state = MovementState.walking;
+            moveSpeed = walkSpeed;
+        }
+        else
+        {
+            //MODE - AIR
+            state = MovementState.air;
         }
     }
     private void MovePlayer ()
